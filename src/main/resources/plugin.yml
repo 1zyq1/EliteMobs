@@ -1,0 +1,21 @@
+name: EliteMobs
+version: '${version}'
+main: com.elitemobs.EliteMobsPlugin
+api-version: '1.21'
+description: 精英怪插件 - 概率刷新带技能的强化怪物
+author: 1zyq1
+
+commands:
+  elitemobs:
+    description: 精英怪插件主命令
+    usage: /elitemobs <reload|info|clear>
+    permission: elitemobs.admin
+  emreload:
+    description: 重载精英怪插件配置
+    usage: /emreload
+    permission: elitemobs.admin
+
+permissions:
+  elitemobs.admin:
+    description: 精英怪插件管理员权限
+    default: op

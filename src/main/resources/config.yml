@@ -1,0 +1,224 @@
+# ============================================
+# 精英怪插件配置
+# ============================================
+
+# 启用精英怪生成的世界列表
+worlds:
+  - "world"
+  - "world_nether"
+  - "world_the_end"
+
+# 精英怪全局生成概率 (0.0 - 1.0)
+# 原版怪物自然刷新时，有此概率升级为高级/精英/王者/BOSS
+spawn-chance: 0.35
+
+# ============================================
+# 血量上限 (智能缩放，非硬限制)
+# ============================================
+max-health-cap: 150    # 怪物血量不超过此值，自动缩放倍率
+
+# ============================================
+# 骷髅武器配置
+# ============================================
+skeleton-bow-chance: 0.4    # 精英骷髅使用弓箭的概率 (0.4 = 40%拿弓, 60%拿剑)
+
+# ============================================
+# 清理配置
+# ============================================
+spawning:
+  despawn-radius: 48        # 玩家远离超过此距离时怪物消失 (格)
+  despawn-check-interval: 60  # 检查怪物是否远离的间隔 (tick)
+
+# ============================================
+# 秒杀机制
+# ============================================
+instakill:
+  enabled: true
+  chance: 0.005          # 基础秒杀概率 (0.5%)
+
+# ============================================
+# 技能配置
+# ============================================
+
+skills:
+  # 火焰弹发射技能 (骷髅发射火焰弹)
+  fireball-launcher:
+    enabled: true
+    interval-ticks: 40        # 每40tick(2秒)发射一次
+    launch-height: 2.0        # 发射高度偏移
+    speed: 1.5                # 火焰弹速度
+
+  # 高跳技能
+  high-jump:
+    enabled: true
+    jump-multiplier: 3.0      # 跳跃高度倍率
+    jump-interval-ticks: 80   # 每80tick(4秒)跳跃一次
+
+  # 火焰附加技能 (攻击时点燃玩家)
+  fire-aspect:
+    enabled: true
+    fire-duration-ticks: 100  # 燃烧持续时间 (5秒)
+
+  # 传送技能 (传送到最近玩家背后)
+  teleport:
+    enabled: true
+    interval-ticks: 60        # 每60tick(3秒)尝试传送一次
+    range: 20.0               # 传送搜索范围 (格)
+
+  # 召唤小怪技能 (周期性召唤同类弱化版本)
+  summon-minions:
+    enabled: true
+    interval-ticks: 150       # 每150tick(7.5秒)召唤一次
+    max-minions: 4            # 最大小怪数量
+    minion-health-multiplier: 2.0   # 小怪血量倍率
+    minion-damage-multiplier: 1.5   # 小怪伤害倍率
+
+  # 反伤技能 (被攻击时反弹伤害并回血)
+  thorns:
+    enabled: true
+    reflect-percentage: 0.4   # 反伤比例 (40%)
+
+  # 苦力怕分裂技能 (爆炸前分裂成多个小苦力怕)
+  creeper-split:
+    enabled: true
+    split-count: 4            # 分裂数量
+    split-health-multiplier: 0.6   # 分裂体血量倍率
+    split-damage-multiplier: 0.8   # 分裂体伤害倍率
+    recursive: true           # 分裂体是否能再次分裂
+
+  # 眩晕技能 (使玩家失明+缓慢+跳跃抑制)
+  stun:
+    enabled: true
+    duration-ticks: 80        # 眩晕持续时间 (4秒)
+    cooldown-ticks: 160       # 冷却时间 (8秒)
+
+  # 失明技能 (使玩家失明)
+  blindness:
+    enabled: true
+    duration-ticks: 100       # 失明持续时间 (5秒)
+    cooldown-ticks: 200       # 冷却时间 (10秒)
+
+  # 挖掘疲劳技能 (使玩家挖掘速度大幅降低)
+  mining-fatigue:
+    enabled: true
+    duration-ticks: 120       # 挖掘疲劳持续时间 (6秒)
+    cooldown-ticks: 200       # 冷却时间 (10秒)
+
+# ============================================
+# 掉落奖励配置 (按等级)
+# ============================================
+loot:
+  advanced:
+    # 高级怪掉落
+    exp: 15
+    items:
+      - "minecraft:iron_nugget:5:10"
+      - "minecraft:coal:2:5"
+      - "minecraft:bone:3:7"
+      - "minecraft:iron_ingot:0:1"
+
+  elite:
+    # 精英怪掉落
+    exp: 30
+    items:
+      - "minecraft:iron_ingot:1:3"
+      - "minecraft:gold_nugget:2:6"
+      - "minecraft:ender_pearl:0:1"
+      - "minecraft:lapis_lazuli:2:6"
+      - "minecraft:redstone:2:6"
+      - "minecraft:diamond:0:1"
+
+  king:
+    # 王者怪掉落
+    exp: 80
+    items:
+      - "minecraft:diamond:1:3"
+      - "minecraft:emerald:1:2"
+      - "minecraft:netherite_scrap:0:1"
+      - "minecraft:golden_apple:0:1"
+      - "minecraft:ender_pearl:1:3"
+      - "minecraft:blaze_rod:1:2"
+      - "minecraft:totem_of_undying:0:1"
+
+  boss:
+    # BOSS掉落 (最丰厚)
+    exp: 150
+    items:
+      - "minecraft:diamond:3:6"
+      - "minecraft:emerald:2:4"
+      - "minecraft:netherite_scrap:1:2"
+      - "minecraft:golden_apple:1:2"
+      - "minecraft:ender_pearl:2:5"
+      - "minecraft:blaze_rod:2:4"
+      - "minecraft:totem_of_undying:0:1"
+      - "minecraft:nether_star:0:1"
+
+# ============================================
+# 每种怪物的精英配置
+# ============================================
+
+mobs:
+  skeleton:
+    enabled: true
+    health-multiplier: 5.0
+    damage-multiplier: 4.5
+    speed-multiplier: 1.3
+    skills:
+      - "fireball-launcher"
+      - "high-jump"
+      - "fire-aspect"
+      - "mining-fatigue"
+
+  zombie:
+    enabled: true
+    health-multiplier: 6.0
+    damage-multiplier: 3.5
+    speed-multiplier: 1.1
+    skills:
+      - "high-jump"
+      - "summon-minions"
+      - "thorns"
+      - "stun"
+
+  spider:
+    enabled: true
+    health-multiplier: 4.0
+    damage-multiplier: 4.0
+    speed-multiplier: 1.8
+    skills:
+      - "high-jump"
+      - "teleport"
+      - "fire-aspect"
+      - "blindness"
+
+  creeper:
+    enabled: true
+    health-multiplier: 3.5
+    damage-multiplier: 5.0
+    speed-multiplier: 1.2
+    skills:
+      - "creeper-split"
+      - "summon-minions"
+      - "blindness"
+
+  piglin:
+    enabled: true
+    health-multiplier: 4.5
+    damage-multiplier: 4.0
+    speed-multiplier: 1.3
+    skills:
+      - "high-jump"
+      - "thorns"
+      - "fire-aspect"
+      - "mining-fatigue"
+
+  enderman:
+    enabled: true
+    health-multiplier: 4.0
+    damage-multiplier: 5.5
+    speed-multiplier: 1.6
+    skills:
+      - "high-jump"
+      - "teleport"
+      - "summon-minions"
+      - "stun"
