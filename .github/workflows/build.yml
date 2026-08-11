@@ -3,6 +3,7 @@ name: Build EliteMobs
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
 
@@ -31,3 +32,12 @@ jobs:
       with:
         name: EliteMobs
         path: build/libs/EliteMobs.jar
+
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: build/libs/EliteMobs.jar
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
