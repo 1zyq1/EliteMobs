@@ -2,6 +2,7 @@ package com.elitemobs.skills
 
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import org.bukkit.NamespacedKey
 import org.bukkit.Particle
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Creeper
@@ -9,7 +10,9 @@ import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.entity.EntityDeathEvent
 import org.bukkit.event.entity.EntityExplodeEvent
+import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
@@ -19,6 +22,7 @@ class CreeperSplitSkill(private val plugin: com.elitemobs.EliteMobsPlugin) : Lis
 
     private val activeMobs = ConcurrentHashMap.newKeySet<UUID>()
     private val splitConfig = ConcurrentHashMap<UUID, Map<String, Any>>()
+    private val parentKey = NamespacedKey(plugin, "split_parent")
 
     fun start(entityUUID: UUID, config: Map<String, Any>) {
         activeMobs.add(entityUUID)
@@ -58,6 +62,9 @@ class CreeperSplitSkill(private val plugin: com.elitemobs.EliteMobsPlugin) : Lis
             val safeLoc = findSafeLocation(spawnLoc, 3) ?: continue
 
             val miniCreeper = entity.world.spawnEntity(safeLoc, org.bukkit.entity.EntityType.CREEPER) as? Creeper ?: continue
+
+            // 标记分裂体归属
+            miniCreeper.persistentDataContainer.set(parentKey, PersistentDataType.STRING, entity.uniqueId.toString())
 
             // 设置小苦力怕属性
             val baseHealth = miniCreeper.getAttribute(Attribute.MAX_HEALTH)?.value ?: 20.0
@@ -104,6 +111,14 @@ class CreeperSplitSkill(private val plugin: com.elitemobs.EliteMobsPlugin) : Lis
             30,
             0.5, 0.5, 0.5, 0.1
         )
+    }
+
+    @EventHandler
+    fun onSplitCreeperDeath(event: EntityDeathEvent) {
+        val uuid = event.entity.uniqueId
+        if (activeMobs.contains(uuid)) {
+            stop(uuid)
+        }
     }
 
     private fun findSafeLocation(loc: Location, maxSearch: Int): Location? {

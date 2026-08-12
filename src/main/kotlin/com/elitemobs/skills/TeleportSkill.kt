@@ -41,14 +41,16 @@ class TeleportSkill(private val plugin: com.elitemobs.EliteMobsPlugin) {
     }
 
     private fun teleportToPlayer(entity: LivingEntity, range: Double) {
+        val rangeSquared = range * range
+
         // 找到范围内最近的玩家
         val target = entity.world.players
             .filter {
-                it.location.distance(entity.location) <= range &&
+                it.location.distanceSquared(entity.location) <= rangeSquared &&
                 it.gameMode != org.bukkit.GameMode.SPECTATOR &&
                 !it.isDead
             }
-            .minByOrNull { it.location.distance(entity.location) }
+            .minByOrNull { it.location.distanceSquared(entity.location) }
             ?: return
 
         // 传送前粒子效果

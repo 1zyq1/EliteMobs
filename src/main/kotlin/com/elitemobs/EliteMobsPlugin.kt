@@ -37,13 +37,6 @@ class EliteMobsPlugin : JavaPlugin(), Listener, CommandExecutor {
         getCommand("elitemobs")?.setExecutor(this)
         getCommand("emreload")?.setExecutor(this)
 
-        // 启动怪物AI循环 (tick技能)
-        Bukkit.getScheduler().runTaskTimer(this, Runnable {
-            managedMobs.values.forEach { mob ->
-                mob.tick()
-            }
-        }, 20L, 1L)
-
         // 启动清理循环 - 玩家远离时移除怪物
         Bukkit.getScheduler().runTaskTimer(this, Runnable {
             despawnDistantMobs()

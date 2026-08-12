@@ -6,9 +6,9 @@ import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.entity.TNTPrimed
 import org.bukkit.event.EventHandler
+import org.bukkit.event.HandlerList
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
-import org.bukkit.event.entity.EntityDeathEvent
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -28,16 +28,26 @@ class SkillManager(private val plugin: EliteMobsPlugin) : Listener {
     val miningFatigueSkill = MiningFatigueSkill(plugin)
 
     private val ownerKey = org.bukkit.NamespacedKey(plugin, "tnt_owner")
+    private val registeredListeners = mutableListOf<Listener>()
 
     fun initialize() {
-        // 注册事件监听器类技能
-        Bukkit.getPluginManager().registerEvents(fireAspectSkill, plugin)
-        Bukkit.getPluginManager().registerEvents(thornsSkill, plugin)
-        Bukkit.getPluginManager().registerEvents(creeperSplitSkill, plugin)
-        Bukkit.getPluginManager().registerEvents(instakillSkill, plugin)
-        Bukkit.getPluginManager().registerEvents(stunSkill, plugin)
-        Bukkit.getPluginManager().registerEvents(blindnessSkill, plugin)
-        Bukkit.getPluginManager().registerEvents(miningFatigueSkill, plugin)
+        // 先注销旧监听器，防止重载时重复注册
+        unregisterListeners()
+
+        val listeners = listOf(fireAspectSkill, thornsSkill, creeperSplitSkill,
+            instakillSkill, stunSkill, blindnessSkill, miningFatigueSkill)
+
+        listeners.forEach { listener ->
+            Bukkit.getPluginManager().registerEvents(listener, plugin)
+            registeredListeners.add(listener)
+        }
+    }
+
+    private fun unregisterListeners() {
+        registeredListeners.forEach { listener ->
+            HandlerList.unregisterAll(listener)
+        }
+        registeredListeners.clear()
     }
 
     fun registerSkill(entityUUID: UUID, skillName: String) {
@@ -81,19 +91,22 @@ class SkillManager(private val plugin: EliteMobsPlugin) : Listener {
 
     fun unregisterAll(entityUUID: UUID) {
         val skills = activeSkills.remove(entityUUID) ?: return
-        skills.keys.forEach { skillName -> unregisterSkill(entityUUID, skillName) }
-        instakillSkill.stop(entityUUID)
-    }
-
-    @EventHandler
-    fun onEntityDeath(event: EntityDeathEvent) {
-        val entity = event.entity
-        val uuid = entity.uniqueId
-
-        if (activeSkills.containsKey(uuid)) {
-            unregisterAll(uuid)
-            plugin.removeEliteMob(uuid)
+        // 直接遍历 skills 的 key，不需要再调用 unregisterSkill（避免冗余查找）
+        skills.keys.forEach { skillName ->
+            when (skillName) {
+                "fireball-launcher" -> tntSkill.stop(entityUUID)
+                "high-jump" -> highJumpSkill.stop(entityUUID)
+                "fire-aspect" -> fireAspectSkill.stop(entityUUID)
+                "teleport" -> teleportSkill.stop(entityUUID)
+                "summon-minions" -> summonMinionsSkill.stop(entityUUID)
+                "thorns" -> thornsSkill.stop(entityUUID)
+                "creeper-split" -> creeperSplitSkill.stop(entityUUID)
+                "stun" -> stunSkill.stop(entityUUID)
+                "blindness" -> blindnessSkill.stop(entityUUID)
+                "mining-fatigue" -> miningFatigueSkill.stop(entityUUID)
+            }
         }
+        instakillSkill.stop(entityUUID)
     }
 
     @EventHandler

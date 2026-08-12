@@ -2,18 +2,23 @@ package com.elitemobs.skills
 
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import org.bukkit.NamespacedKey
 import org.bukkit.attribute.Attribute
-import org.bukkit.entity.EntityType
 import org.bukkit.entity.LivingEntity
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.entity.EntityDeathEvent
+import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class SummonMinionsSkill(private val plugin: com.elitemobs.EliteMobsPlugin) {
+class SummonMinionsSkill(private val plugin: com.elitemobs.EliteMobsPlugin) : Listener {
 
     private val activeTasks = ConcurrentHashMap<UUID, Int>()
     private val minionCount = ConcurrentHashMap<UUID, Int>()
+    private val ownerKey = NamespacedKey(plugin, "minion_owner")
 
     fun start(entityUUID: UUID, config: Map<String, Any>) {
         val interval = (config["interval-ticks"] as? Int) ?: 200
@@ -50,6 +55,20 @@ class SummonMinionsSkill(private val plugin: com.elitemobs.EliteMobsPlugin) {
         minionCount.remove(entityUUID)
     }
 
+    @EventHandler
+    fun onMinionDeath(event: EntityDeathEvent) {
+        val entity = event.entity
+        val ownerUUID = entity.persistentDataContainer.get(ownerKey, PersistentDataType.STRING) ?: return
+
+        try {
+            val owner = UUID.fromString(ownerUUID)
+            val currentCount = minionCount[owner] ?: return
+            if (currentCount > 0) {
+                minionCount[owner] = currentCount - 1
+            }
+        } catch (_: IllegalArgumentException) { }
+    }
+
     private fun spawnMinion(entity: LivingEntity, healthMultiplier: Double, damageMultiplier: Double) {
         val entityType = entity.type
 
@@ -68,6 +87,9 @@ class SummonMinionsSkill(private val plugin: com.elitemobs.EliteMobsPlugin) {
             val safeLoc = findSafeLocation(spawnLoc, 3) ?: continue
 
             val minion = entity.world.spawnEntity(safeLoc, entityType) as? LivingEntity ?: return
+
+            // 标记小怪归属
+            minion.persistentDataContainer.set(ownerKey, PersistentDataType.STRING, entity.uniqueId.toString())
 
             // 设置小怪属性（较弱）
             val baseHealth = minion.getAttribute(Attribute.MAX_HEALTH)?.value ?: 20.0

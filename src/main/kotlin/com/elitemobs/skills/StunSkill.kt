@@ -15,18 +15,20 @@ class StunSkill(private val plugin: EliteMobsPlugin) : Listener {
 
     private val activeMobs = ConcurrentHashMap.newKeySet<UUID>()
     private val lastUsed = ConcurrentHashMap<UUID, Long>()
-    private var durationTicks = 80
-    private var cooldownTicks = 160L
+    private val durationMap = ConcurrentHashMap<UUID, Int>()
+    private val cooldownMap = ConcurrentHashMap<UUID, Long>()
 
     fun start(entityUUID: UUID, config: Map<String, Any>) {
         activeMobs.add(entityUUID)
-        durationTicks = (config["duration-ticks"] as? Number)?.toInt() ?: 80
-        cooldownTicks = (config["cooldown-ticks"] as? Number)?.toLong() ?: 160L
+        durationMap[entityUUID] = (config["duration-ticks"] as? Number)?.toInt() ?: 80
+        cooldownMap[entityUUID] = (config["cooldown-ticks"] as? Number)?.toLong() ?: 160L
     }
 
     fun stop(entityUUID: UUID) {
         activeMobs.remove(entityUUID)
         lastUsed.remove(entityUUID)
+        durationMap.remove(entityUUID)
+        cooldownMap.remove(entityUUID)
     }
 
     @EventHandler
@@ -36,15 +38,18 @@ class StunSkill(private val plugin: EliteMobsPlugin) : Listener {
 
         if (!activeMobs.contains(damager.uniqueId)) return
 
+        val duration = durationMap[damager.uniqueId] ?: 80
+        val cooldown = cooldownMap[damager.uniqueId] ?: 160L
+
         val now = System.currentTimeMillis()
         val last = lastUsed[damager.uniqueId] ?: 0L
-        if (now - last < cooldownTicks * 50) return
+        if (now - last < cooldown * 50) return
         lastUsed[damager.uniqueId] = now
 
         // 眩晕 = 失明 + 缓慢 + 跳跃抑制
-        damaged.addPotionEffect(PotionEffect(PotionEffectType.BLINDNESS, durationTicks, 0, true, false))
-        damaged.addPotionEffect(PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 2, true, false))
-        damaged.addPotionEffect(PotionEffect(PotionEffectType.JUMP_BOOST, durationTicks, 128, true, false))
+        damaged.addPotionEffect(PotionEffect(PotionEffectType.BLINDNESS, duration, 0, true, false))
+        damaged.addPotionEffect(PotionEffect(PotionEffectType.SLOWNESS, duration, 2, true, false))
+        damaged.addPotionEffect(PotionEffect(PotionEffectType.JUMP_BOOST, duration, 128, true, false))
 
         damaged.sendMessage("§c§l被眩晕了！")
 

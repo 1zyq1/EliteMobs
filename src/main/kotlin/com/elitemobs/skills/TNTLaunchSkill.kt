@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap
 class TNTLaunchSkill(private val plugin: com.elitemobs.EliteMobsPlugin) {
 
     private val activeTasks = ConcurrentHashMap<UUID, Int>()
-    private val ownerKey = NamespacedKey(plugin, "fireball_owner")
 
     fun start(entityUUID: UUID, config: Map<String, Any>) {
         val interval = (config["interval-ticks"] as? Int) ?: 40
@@ -32,8 +31,8 @@ class TNTLaunchSkill(private val plugin: com.elitemobs.EliteMobsPlugin) {
 
             // 只有附近有玩家时才发射
             val nearestPlayer = entity.world.players
-                .filter { it.location.distance(entity.location) < 20.0 }
-                .minByOrNull { it.location.distance(entity.location) }
+                .filter { it.location.distanceSquared(entity.location) < 400.0 }  // 20^2 = 400
+                .minByOrNull { it.location.distanceSquared(entity.location) }
 
             if (nearestPlayer == null) return@Runnable
 

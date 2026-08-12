@@ -15,18 +15,20 @@ class BlindnessSkill(private val plugin: EliteMobsPlugin) : Listener {
 
     private val activeMobs = ConcurrentHashMap.newKeySet<UUID>()
     private val lastUsed = ConcurrentHashMap<UUID, Long>()
-    private var durationTicks = 100
-    private var cooldownTicks = 200L
+    private val durationMap = ConcurrentHashMap<UUID, Int>()
+    private val cooldownMap = ConcurrentHashMap<UUID, Long>()
 
     fun start(entityUUID: UUID, config: Map<String, Any>) {
         activeMobs.add(entityUUID)
-        durationTicks = (config["duration-ticks"] as? Number)?.toInt() ?: 100
-        cooldownTicks = (config["cooldown-ticks"] as? Number)?.toLong() ?: 200L
+        durationMap[entityUUID] = (config["duration-ticks"] as? Number)?.toInt() ?: 100
+        cooldownMap[entityUUID] = (config["cooldown-ticks"] as? Number)?.toLong() ?: 200L
     }
 
     fun stop(entityUUID: UUID) {
         activeMobs.remove(entityUUID)
         lastUsed.remove(entityUUID)
+        durationMap.remove(entityUUID)
+        cooldownMap.remove(entityUUID)
     }
 
     @EventHandler
@@ -36,12 +38,15 @@ class BlindnessSkill(private val plugin: EliteMobsPlugin) : Listener {
 
         if (!activeMobs.contains(damager.uniqueId)) return
 
+        val duration = durationMap[damager.uniqueId] ?: 100
+        val cooldown = cooldownMap[damager.uniqueId] ?: 200L
+
         val now = System.currentTimeMillis()
         val last = lastUsed[damager.uniqueId] ?: 0L
-        if (now - last < cooldownTicks * 50) return
+        if (now - last < cooldown * 50) return
         lastUsed[damager.uniqueId] = now
 
-        damaged.addPotionEffect(PotionEffect(PotionEffectType.BLINDNESS, durationTicks, 0, true, false))
+        damaged.addPotionEffect(PotionEffect(PotionEffectType.BLINDNESS, duration, 0, true, false))
         damaged.sendMessage("§8§l你失明了！")
 
         damaged.world.spawnParticle(
